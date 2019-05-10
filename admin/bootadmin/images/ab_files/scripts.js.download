@@ -1,0 +1,392 @@
+(function ($) {
+
+  var mobileSize, tabletSize, desktopSize;
+  function updateGlobalVars() {
+    mobileSize = window.mobileSize = window.innerWidth < 768;
+    tabletSize = !mobileSize && window.innerWidth < 1200;
+    desktopSize = !mobileSize && !tabletSize;
+  }
+  window.addEventListener('optimizedResize', updateGlobalVars);
+  updateGlobalVars();
+
+  function windowScrollTop() {
+    return document.documentElement.scrollTop || document.body.scrollTop || 0;
+  }
+
+  function each(variable, callback) {
+    Array.prototype.forEach.call(variable, callback);
+  }
+
+
+  function initPageTransition() {
+    if (!window.Barba || window.innerWidth < 1200) return;
+
+    var $transition = $('#transition'),
+        contentWrapperId = 'page-content-wrapper',
+        contentClass = 'main__content';
+
+    if (!$transition.length || !document.getElementById(contentWrapperId) || !document.getElementsByClassName(contentClass).length) return;
+
+    function updateVariables(html) {
+      if (!html) return;
+      var bodyClass = html.match(/<body class="(.+?)"/);
+      document.body.className = bodyClass ? bodyClass[1] : '';
+    }
+
+    Barba.Pjax.Dom.wrapperId = contentWrapperId;
+    Barba.Pjax.Dom.containerClass = contentClass;
+
+    // BUGFIX: adding possibility to unbind
+    Barba.Pjax.onLinkClickBinded = Barba.Pjax.onLinkClick.bind(Barba.Pjax)
+    Barba.Pjax.onStateChangeBinded = Barba.Pjax.onStateChange.bind(Barba.Pjax)
+    Barba.Pjax.bindEvents = function() {
+      window.addEventListener('popstate', this.onStateChangeBinded);
+    };
+    Barba.Pjax.unbindEvents = function() {
+      window.removeEventListener('popstate', this.onStateChangeBinded);
+    };
+
+    // BUGFIX: Fixing back button
+    Barba.Pjax.forceGoTo = function(url) {
+      Barba.Pjax.unbindEvents();
+      history.back();
+      setTimeout(function() {
+        location.href = url;
+      }, 100);
+    };
+
+    // BUGFIX: handle if there is no main__content in the page
+    Barba.Pjax.Dom.getContainerOriginal = Barba.Pjax.Dom.getContainer;
+    Barba.Pjax.Dom.getContainer = function(element) {
+      try {
+        var container = this.getContainerOriginal(element);
+      } catch (error) {
+        var href = location.href;
+        Barba.Pjax.forceGoTo(href);
+        throw new Error('No container found');
+      }
+      return container;
+    };
+
+    Barba.Pjax.Dom.putContainer = function(element) {
+      element.style.visibility = 'hidden';
+      element.style.height = '0';
+      element.style.overflow = 'hidden';
+
+      updateVariables(this.currentHTML)
+
+      var wrapper = this.getWrapper();
+      wrapper.appendChild(element);
+    }
+
+    var transitionTimeout;
+
+    var FadeTransition = Barba.BaseTransition.extend({
+      start: function() {
+        Promise
+          .all([this.newContainerLoading, this.fadeOut()])
+          .then(this.fadeIn.bind(this))
+      },
+
+      fadeOut: function() {
+        return new Promise(function(resolve) {
+
+          if (location.pathname === '/') {
+            $('.transition').removeClass('transition--type1').addClass('transition--type2')
+          } else {
+            $('.transition').removeClass('transition--type2').addClass('transition--type1')
+          }
+          console.log(location.pathname);
+          setTimeout(function() {
+            $('.transition').addClass('animating');
+          }, 10);
+          clearTimeout(transitionTimeout);
+          transitionTimeout = setTimeout(function () {
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+            resolve();
+          }, 1600);
+        });
+      },
+
+      fadeIn: function() {
+        var _this = this;
+        var $el = $(this.newContainer);
+
+        $(this.oldContainer).css('display', 'none');
+
+        $el.css({'height': '', 'overflow': '', visibility: 'visible'});
+
+        clearTimeout(transitionTimeout);
+        transitionTimeout = setTimeout(function() {
+          $('.transition').removeClass('animating');
+          clearTimeout(transitionTimeout);
+          transitionTimeout = setTimeout(function() {
+            _this.done();
+          }, 300);
+        }, 10);
+
+        setTimeout(function() {
+          initContent();
+        }, 1000);
+      }
+    });
+
+    Barba.Pjax.getTransition = function() {
+      return FadeTransition;
+    };
+
+    Barba.Pjax.start();
+
+    Barba.Dispatcher.on('initStateChange', function(currentStatus) {
+      var parser = document.createElement('a');
+      parser.href = currentStatus.url;
+      // updateLinks(null, parser.pathname);
+    });
+
+    Barba.Dispatcher.on('transitionCompleted', function(currentStatus, prevStatus) {
+      // updateScrollAnimation();
+    });
+
+    // The new content has been loaded and injected in the wrapper.
+    Barba.Dispatcher.on('newPageReady', function(currentStatus, prevStatus) {
+      // initPageContent();
+      // if (window.ga) {
+      //   ga('set', 'page', location.pathname);
+      //   ga('send', 'pageview');
+      // }
+    });
+
+    var headerNav = document.querySelector('.header__nav');
+    //   $menuLi = $menu.find('li'),
+    //   $menuA = $menuLi.find('a');
+
+    // function findLi (href) {
+    //   for (var i = 0; i < $menuA.length; i++) {
+    //     if ($menuA[i].getAttribute('href') === href) {
+    //       return $menuA.eq(i).closest('li');
+    //     }
+    //   }
+    //   return null;
+    // }
+    //
+    // function updateLinks($li, href) {
+    //   $li = $li || findLi(href);
+    //   $menuLi.removeClass('active');
+    //   $menu.removeClass('opened');
+    //   $li && $li.addClass('active');
+    //   window.closeMenuMore && closeMenuMore();
+    // }
+    if (!headerNav) return;
+
+    $(document).on('click', '.header__logo a, .header__nav a, .page-transition, .work, .page-transition, .preview .item__link', function(e) {
+      var href = $(this).attr('href');
+
+      if (!Barba.Pjax.preventCheck(e, this)) return;
+      e.preventDefault();
+      if (!href || href === '#') return;
+
+      var activeLi = headerNav.querySelector('.active');
+      if (activeLi) activeLi.className = '';
+
+      if (headerNav.contains(this)) {
+        this.parentNode.className = 'active';
+      } else {
+        var headerLink = headerNav.querySelector('[href="' + href + '"]');
+        if (headerLink) headerLink.parentNode.className = 'active';
+      }
+
+      if (this.classList.contains('work')) {
+        console.log('WORK');
+      }
+
+      // return;
+      // var $li = findLi(href);
+      // if ($li && $li.hasClass('active')) return;
+      Barba.Pjax.goTo(href);
+      // updateLinks($li, href);
+    });
+
+  }
+
+
+
+  var $works;
+
+  function initWorks() {
+    return;
+    $works = $('.works');
+    var works = document.getElementsByClassName('works');
+
+    if (!works.length) return;
+
+    var items = works[0].getElementsByClassName('work');
+
+    console.log(items);
+
+    appearance.watch(items, {
+      enterOnce: true
+    });
+
+    return;
+
+    var $worksItems = $works.find('.works__items'),
+        $items = $worksItems.find('.item'),
+        $spacer = $worksItems.find('.works__spacer');
+
+    console.log($spacer)
+
+
+    $worksItems.isotope({
+      transitionDuration: 0,
+      itemSelector: '.item',
+      percentPosition: true,
+      masonry: {
+        columnWidth: '.works__spacer'
+      }
+    }).isotope('stamp', $spacer).isotope().isotope({transitionDuration: 800});
+
+    $(document).on('click', '.works__nav li', function() {
+      var $item = $(this);
+      if ($item.hasClass('active')) return;
+      $item.parent().children().removeClass('active');
+      $item.addClass('active');
+      $worksItems.isotope({ filter: $item.data('filter') });
+    });
+  }
+
+
+  // var scrollAnimationElements = [],
+  //   scrollAnimationLength = 0;
+  //
+  // function checkScrollAnimation() {
+  //   if (!scrollAnimationElements || !scrollAnimationElements.length) return;
+  //   var el;
+  //   for (var i = 0; i < scrollAnimationElements.length; i++) {
+  //     el = scrollAnimationElements[i];
+  //     // el.style.boxShadow = '0 0 0 1px blue';
+  //     if (el.getBoundingClientRect().top > window.innerHeight - 100) continue;
+  //     // el.style.boxShadow = '0 0 0 1px red';
+  //     el.dispatchEvent(new CustomEvent('play-animation'));
+  //   }
+  // }
+  //
+  // function updateScrollAnimation() {
+  //   scrollAnimationElements = document.querySelectorAll('[data-scroll-animation]');
+  //   scrollAnimationLength = (scrollAnimationElements && scrollAnimationElements.length) || 0;
+  //   checkScrollAnimation();
+  // }
+  //
+  // function initScrollAnimation() {
+  //   var scrollPosition = window.scrollY,
+  //     ticking = false;
+  //
+  //   window.addEventListener('scroll', function(e) {
+  //     scrollPosition = window.scrollY;
+  //     if (scrollAnimationLength && !ticking) {
+  //       ticking = true;
+  //       setTimeout(function() {
+  //         checkScrollAnimation();
+  //         ticking = false;
+  //       }, 50);
+  //     }
+  //   });
+  //
+  //   updateScrollAnimation();
+  // }
+
+  function initHovers () {
+    var header__nav = document.getElementsByClassName('header__nav')[0];
+
+    if (!header__nav) return;
+
+    var symbols = 'abcdefghigklmnopqrstuvwxyz1234567890!@#$%^&*()[]{}';
+    var anchors = header__nav.getElementsByTagName('a');
+
+    function randomSymbol () {
+      return symbols[Math.floor( Math.random() * symbols.length )];
+    }
+
+    function setOriginalLetter (anchor, text) {
+      var letter;
+      for (var i = 0; i < anchor.children.length; ++i) {
+        letter = anchor.children[i].getAttribute('data-letter').toLowerCase();
+        if (letter !== text[i].toLowerCase()) {
+          anchor.children[i].setAttribute('data-letter', text[i]);
+          return true;
+        }
+      }
+      return false;
+    }
+
+    each(anchors, function(a) {
+      var text = a.getAttribute('title'),
+          iterations = 0,
+          changeInterval,
+          originalTimeout;
+
+      a.addEventListener('mouseenter', function() {
+        clearInterval(changeInterval);
+        clearTimeout(originalTimeout);
+        iterations = 0;
+        changeInterval = setInterval(function() {
+          ++iterations;
+          if (iterations < 9) {
+            a.children[ Math.floor(Math.random() * a.children.length) ].setAttribute('data-letter', randomSymbol());
+          } else if (!setOriginalLetter(a, text)) {
+            clearInterval(changeInterval);
+          }
+        }, 30);
+      });
+    })
+  }
+  
+
+  function initContent() {
+    initWorks();
+    nok.destroy();
+    nok.update();
+  }
+
+  document.addEventListener("DOMContentLoaded", function() {
+    // document.documentElement.classList.add('loaded');
+
+    var logo = document.querySelector('.logo');
+    if (logo) {
+      var logoCircle = document.querySelector('.logo__circle');
+      logo.addEventListener('mouseenter', function() {
+        logo.classList.add('logo--animate');
+      }, false);
+      logoCircle.addEventListener("animationend", function() {
+        logo.classList.remove('logo--animate');
+      }, false);
+    }
+
+    // initHovers();
+    initPageTransition();
+    // initWorks();
+
+    initContent();
+
+    // skrollr.init({
+    //   smoothScrolling: false,
+    //   mobileCheck: false,
+    //   forceHeight: false
+    // });
+
+    // setTimeout(function () {
+    //   $('.transition').addClass('animating');
+    // }, 2000);
+    //
+    // $('.transition').on('click', function() {
+    //   $(this).removeClass('animating');
+    // });
+
+    // setTimeout(function () {
+    //   $('.transition').removeClass('animating');
+    // }, 5000);
+
+    window.fixMobileVh && fixMobileVh('.frame');
+  });
+
+})(jQuery);

@@ -1,0 +1,31 @@
+.link{
+	font-size:16px;
+	color:black;
+	text-decoration:underline;
+	padding-left:40px;
+	padding-top:20px;
+}
+table,th,tr,td{
+border:1px solid black;
+}
+.head{
+	color:white;
+	padding-left:40px;
+	padding-top:10px;
+	padding-bottom:10px;
+	font-weight:bold;
+	background:#29631d;
+}
+#abc{
+	width:60%;
+}
+#foot{
+	color:white;
+	font-weight:bold;
+	font-size:15px;
+	font-family:times new roman;
+}
+#abcd{
+border-right:1px solid #ccc;
+background:#29631d;
+}

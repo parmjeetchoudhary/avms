@@ -1,0 +1,42 @@
+(function() {
+  nok.component({
+    name: 'changing',
+    selector: '.changing',
+    init: function(changing) {
+      var items = changing.querySelectorAll('.item'),
+          active = 0;
+      Array.prototype.forEach.call(items, function(item, index) {
+        console.log('aa');
+        var img = item.querySelector('img');
+        var grid = document.createElement('ul'),
+          cell, cellImage;
+        var rect = changing.getBoundingClientRect(),
+          width = rect.width;
+        grid.classList.add('changing__grid');
+        for (var i = 0; i < 25; i++) {
+          cell = document.createElement('li');
+          cellImage = document.createElement('div');
+          cellImage.style.width = width + 'px';
+          cellImage.style.transform = 'translateX(-' + (i*4) + '%)';
+          cellImage.style.backgroundImage = 'url("' + img.getAttribute('src') + '")';
+          cell.appendChild(cellImage);
+          grid.appendChild(cell);
+        }
+        item.innerHTML = "";
+        item.appendChild(grid);
+      });
+      items[active].classList.add('active');
+      setInterval(function() {
+        items[active].classList.remove('active');
+        active++;
+        if (active == items.length) {
+          active = 0;
+        }
+        items[active].classList.add('active');
+      }, 3000)
+    },
+    destroy: function() {
+
+    }
+  });
+})();

@@ -1,0 +1,56 @@
+var appearanceWatcher,
+    currentBlock,
+    backgrounds = document.createElement('div');
+
+backgrounds.className = 'backgrounds';
+document.body.insertBefore(backgrounds, document.body.firstChild);
+
+nok.component({
+  name: 'bg-block',
+  selector: 'body',
+  init: function() {
+    appearanceWatcher && appearanceWatcher.destroy();
+    var bgBlocks = document.querySelectorAll('.bg-block');
+
+    if (!bgBlocks.length) return;
+
+    backgrounds.innerHTML = '';
+
+    Array.prototype.forEach.call(bgBlocks, function(block, i) {
+      backgrounds.innerHTML += '<i style="background:' + block.style.backgroundColor + '"></i>';
+      block.style.background = 'none';
+      block.bgBlockNum = i;
+    });
+
+    var elementRect;
+    appearanceWatcher = appearance.watch(bgBlocks, {
+      addClasses: false,
+      customEnterCheck: function(element) {
+        elementRect = element.getBoundingClientRect();
+        return (elementRect.top < window.innerHeight / 2) && (elementRect.bottom > window.innerHeight / 2);
+      }
+    });
+
+    appearanceWatcher.on('appearance:enter', function() {
+      if (currentBlock) {
+        backgrounds.children[currentBlock.bgBlockNum].className = '';
+      }
+      currentBlock = this;
+      backgrounds.children[currentBlock.bgBlockNum].className = 'active';
+    });
+
+    appearanceWatcher.on('appearance:leave', function() {
+      if (currentBlock === this) {
+        backgrounds.children[currentBlock.bgBlockNum].className = '';
+        currentBlock = null;
+      }
+    });
+  },
+  destroy: function() {
+    if (currentBlock) {
+      backgrounds.children[currentBlock.bgBlockNum].className = '';
+    }
+    appearanceWatcher && appearanceWatcher.destroy();
+    appearanceWatcher = null;
+  }
+});

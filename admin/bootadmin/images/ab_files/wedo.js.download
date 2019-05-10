@@ -1,0 +1,12 @@
+nok.component({
+  name: 'wedo',
+  selector: '.we-do',
+  init: function(wedo) {
+    Array.prototype.forEach.call(wedo.querySelectorAll('.item'), function(item) {
+      item.addEventListener('click', function() {
+        if (window.innerWidth >= 1200) return;
+        nok.modal.open(item.querySelector('.item__about').innerHTML, item.getBoundingClientRect(), wedo);
+      });
+    });
+  }
+});

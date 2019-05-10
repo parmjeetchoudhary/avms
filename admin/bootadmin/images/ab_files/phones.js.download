@@ -1,0 +1,22 @@
+nok.component({
+  name: 'phones',
+  selector: '.phones__items',
+  responsive: [{
+    match: function() {
+      return window.innerWidth < 768;
+    },
+    init: function (phones) {
+      $(phones).slick({
+        arrows: true,
+        dots: true,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        mobileFirst: true,
+        responsive: [{
+          breakpoint: 768,
+          settings: 'unslick'
+        }]
+      });
+    }
+  }]
+});

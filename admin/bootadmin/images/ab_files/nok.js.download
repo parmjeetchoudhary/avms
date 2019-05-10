@@ -1,0 +1,86 @@
+(function () {
+  var nok = {};
+  var plugins = [];
+  var components = [];
+
+  // TEMP
+  nok.helpers = {
+    /**
+     * Simple bind, faster than native
+     */
+    bind: function(fn, ctx) {
+      function boundFn (a) {
+        var l = arguments.length;
+        return l
+          ? l > 1
+            ? fn.apply(ctx, arguments)
+            : fn.call(ctx, a)
+          : fn.call(ctx)
+      }
+      // record original fn length
+      boundFn._length = fn.length;
+      return boundFn
+    },
+
+    isReserved: function(str) {
+      var c = (str + '').charCodeAt(0);
+      return c === 0x24 || c === 0x5F
+    },
+
+    initMethods: function(instance, methods) {
+      var props = {}; //vm.$options.props;
+      for (var key in methods) {
+        if (methods[key] == null) {
+          console.warn(
+            "Method \"" + key + "\" has an undefined value in the component definition. " +
+            "Did you reference the function correctly?", instance);
+        } else if (props && props.hasOwnProperty(key)) {
+          console.warn(
+            ("Method \"" + key + "\" has already been defined as a prop.", instance)
+          );
+        } else if ((key in instance) && nok.helpers.isReserved(key)) {
+          console.warn(
+            "Method \"" + key + "\" conflicts with an existing instance method. " +
+            "Avoid defining component methods that start with _ or $."
+          );
+        } else {
+          instance[key] = nok.helpers.bind(methods[key], instance);
+        }
+      }
+    }
+  };
+
+  nok.plugin = function(options) {
+    if (!options) return null;
+    var plugin = new Plugin(options);
+    plugins.push(plugin);
+    return plugin;
+  };
+
+  nok.component = function (options) {
+    if (!options) return null;
+    var component = new Component(options);
+    components.push(component);
+    return component;
+  };
+
+  nok.update = function() {
+    components.forEach(function(component) {
+      component.init();
+    });
+  };
+
+  nok.destroy = function() {
+    components.forEach(function(component) {
+      component.destroy();
+    });
+  };
+
+  window.addEventListener('optimizedResize', function() {
+    components.forEach(function(component) {
+      component.initResponsive();
+    });
+  });
+
+  window.nok = nok;
+})();

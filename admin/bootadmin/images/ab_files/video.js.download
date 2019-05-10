@@ -1,0 +1,86 @@
+(function () {
+
+  function initVideos(elementVideo) {
+    var videos = elementVideo.getElementsByTagName('video');
+    if (!videos.length) return;
+    Array.prototype.forEach.call(videos, function(video) {
+      video.addEventListener('canplaythrough', function(e) {
+        e.target.removeEventListener(e.type, arguments.callee);
+        video.currentTime = 0;
+      });
+      video.src = video.getAttribute('data-src');
+      video.pause();
+    });
+  }
+
+  function initElementVideo(elementVideo) {
+    var items = [elementVideo];
+
+    Array.prototype.forEach.call(items, function(item) {
+      item.isPlaying = false;
+    });
+
+    var scrollPosition = window.scrollY,
+      ticking = false, rect, middle, video, currentPlaying = null;
+
+    function playVideo(i) {
+      // console.warn('play', i);
+      if (items[i].isPlaying) return;
+      items[i].isPlaying = true;
+      if (mobileSize) return;
+      video = items[i].getElementsByTagName('video')[0];
+      video && video.play();
+    }
+
+    function pauseVideo(i) {
+      // console.warn('pause', i);
+      if (!items[i].isPlaying) return;
+      items[i].isPlaying = false;
+      if (mobileSize) return;
+      video = items[i].getElementsByTagName('video')[0];
+      video && video.pause();
+    }
+
+    function checkScroll() {
+      currentPlaying = null;
+      for (var i = 0; i < items.length; i++) {
+        rect = items[i].getBoundingClientRect();
+        middle = (rect.top + rect.bottom) / 2;
+        if (middle < 0 || middle > window.innerHeight) {
+          pauseVideo(i);
+        } else {
+          playVideo(i);
+          currentPlaying = i;
+        }
+      }
+    }
+
+    window.addEventListener('scroll', function() {
+      scrollPosition = window.scrollY;
+      if (ticking) return;
+      ticking = true;
+      setTimeout(function() {
+        checkScroll();
+        ticking = false;
+      }, 50);
+    });
+
+    checkScroll();
+  }
+
+  nok.component({
+    name: 'video',
+    selector: '.element__video',
+    responsive: [{
+      match: function() {
+        return window.innerWidth > 1200;
+      },
+      init: function (elementVideo) {
+        if (elementVideo.videosInitialized) return;
+        elementVideo.videosInitialized = true;
+        initVideos(elementVideo);
+        initElementVideo(elementVideo);
+      },
+    }]
+  });
+})();

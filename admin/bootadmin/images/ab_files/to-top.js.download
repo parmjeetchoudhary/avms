@@ -1,0 +1,27 @@
+nok.component({
+  name: 'appearance',
+  selector: '.to-top',
+  init: function(toTop) {
+    var $toTop = $(toTop),
+      $w = $(window),
+      $body = $("html, body"),
+      shown = false;
+    if (!$toTop.length) return;
+    $toTop.on('click', function() {
+      $body.stop().animate({scrollTop: 0}, 300, 'swing');
+    });
+    function checkScroll() {
+      if ($w.scrollTop() > 100) {
+        if (shown) return;
+        shown = true;
+        $toTop.addClass('to-top--shown');
+      } else {
+        if (!shown) return;
+        shown = false;
+        $toTop.removeClass('to-top--shown');
+      }
+    }
+    $w.on('scroll', checkScroll);
+    checkScroll();
+  }
+});

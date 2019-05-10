@@ -1,0 +1,12 @@
+(function() {
+  var running = false;
+  var onResize = function() {
+    if (running) return;
+    running = true;
+    requestAnimationFrame(function() {
+      window.dispatchEvent(new CustomEvent('optimizedResize'));
+      running = false;
+    });
+  };
+  window.addEventListener('resize', onResize);
+})();

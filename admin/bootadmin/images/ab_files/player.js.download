@@ -1,0 +1,48 @@
+(function() {
+  var player = document.querySelector('.player');
+  var wrapper = document.querySelector('.wrapper');
+  if (!player || !wrapper) return;
+
+  var playerClose = player.querySelector('.player__close');
+  var playerIframe = player.querySelector('.player__iframe');
+  var opened = false;
+  var iframe;
+
+  var vimeoSrc = 'https://player.vimeo.com/video/{id}?api=1&autoplay=1';
+
+  function openPlayer(id) {
+    if (opened) return;
+    opened = true;
+
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.setAttribute('allowfullscreen', 'true');
+      iframe.setAttribute('allowscriptaccess', 'always');
+      iframe.setAttribute('src', vimeoSrc.replace("{id}", id));
+      playerIframe.appendChild(iframe);
+    }
+
+    nok.scroll.disable();
+
+    setTimeout(function() {
+      player.classList.add('player--opened');
+    }, 10);
+  }
+
+  function closePlayer() {
+    opened = false;
+    player.classList.remove('player--opened');
+    nok.scroll.enable();
+    iframe && iframe.contentWindow.postMessage('{"method":"pause"}', "*");
+  }
+
+  playerClose.addEventListener('click', closePlayer);
+
+  nok.plugin({
+    name: 'player',
+    methods: {
+      open: openPlayer,
+      close: closePlayer
+    }
+  });
+})();

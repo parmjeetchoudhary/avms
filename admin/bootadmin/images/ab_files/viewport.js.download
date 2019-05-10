@@ -1,0 +1,27 @@
+(function () {
+
+  var mobileSize, tabletSize, desktopSize;
+  function updateGlobalVars() {
+    mobileSize = window.innerWidth < 768;
+    tabletSize = !mobileSize && window.innerWidth < 1200;
+    desktopSize = !mobileSize && !tabletSize;
+  }
+  window.addEventListener('resize', updateGlobalVars);
+  updateGlobalVars();
+
+  nok.plugin({
+    name: 'viewport',
+    methods: {
+      mobileSize: function() {
+        return mobileSize;
+      },
+      tabletSize: function() {
+        return tabletSize;
+      },
+      desktopSize: function() {
+        return desktopSize;
+      }
+    }
+  });
+
+})();

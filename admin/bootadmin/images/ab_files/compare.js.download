@@ -1,0 +1,38 @@
+(function () {
+  nok.component({
+    name: 'compare',
+    selector: '.compare',
+    init: function(compare) {
+      var $compare = $(compare);
+
+      var $imgs = $compare.find('img'),
+          $resizable = $compare.find('.compare__resizable'),
+          compareWidth;
+
+      function updateVars() {
+        compareWidth = compare.offsetWidth;
+        $imgs.width(compareWidth);
+      }
+
+      var rect, outOfBouds = false;
+
+      window.addEventListener('scroll', function() {
+        rect = compare.getBoundingClientRect();
+        if (rect.top < 0) {
+          !outOfBouds && $resizable.width(0);
+          outOfBouds = true;
+          return;
+        } else if (rect.top > window.innerHeight) {
+          !outOfBouds && $resizable.width('100%');
+          outOfBouds = true;
+          return;
+        };
+        outOfBouds = false;
+        $resizable.width(rect.top / window.innerHeight * 100  + '%');
+      });
+
+      updateVars();
+      window.addEventListener('optimizedResize', updateVars);
+    }
+  });
+})();

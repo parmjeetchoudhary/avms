@@ -1,0 +1,25 @@
+var appearanceWatcher,
+    appearanceOnceWatcher;
+
+appearance.defaultOptions({
+  offset: 50
+});
+
+nok.component({
+  name: 'appearance',
+  selector: 'body',
+  init: function() {
+    appearanceWatcher && appearanceWatcher.destroy();
+    appearanceOnceWatcher && appearanceOnceWatcher.destroy();
+    appearanceWatcher = appearance.watch('[data-appearance]');
+    appearanceOnceWatcher = appearance.watch('[data-appearance-once]', {
+      enterOnce: true,
+      animateVisible: false
+    });
+  },
+  destroy: function() {
+    appearanceWatcher && appearanceWatcher.destroy();
+    appearanceOnceWatcher && appearanceOnceWatcher.destroy();
+    appearanceWatcher = appearanceOnceWatcher = null;
+  }
+});

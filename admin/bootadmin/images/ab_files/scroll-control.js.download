@@ -1,0 +1,88 @@
+/*! scrollControl v1.0.0 | (c) Alexander Stulnikov | MIT */
+(function() {
+
+  var scrollControl = {};
+
+  var scrollDisabled = false,
+      scrollableElements = [];
+
+  function preventWindowScroll(event) {
+    event.preventDefault();
+    return false;
+  }
+
+  function wheelOnScrollable(e) {
+    if (e.currentTarget.scrollHeight === e.currentTarget.offsetHeight) return;
+    if (e.deltaY > 0) {
+      if (e.currentTarget.offsetHeight + e.currentTarget.scrollTop >= e.currentTarget.scrollHeight) return;
+      if (e.currentTarget.offsetHeight + e.currentTarget.scrollTop + e.deltaY >= e.currentTarget.scrollHeight) {
+        e.currentTarget.scrollTop = e.currentTarget.scrollHeight - e.currentTarget.offsetHeight;
+        return;
+      }
+    } else if (e.deltaY < 0) {
+      if (e.currentTarget.scrollTop <= 0) return;
+      if (e.currentTarget.offsetHeight + e.deltaY <= 0) {
+        e.currentTarget.scrollTop = 0;
+        return;
+      }
+    } else {
+      return
+    }
+    e.stopPropagation()
+  }
+
+  function touchmoveOnScrollable(event) {
+    if (event.currentTarget.scrollHeight === event.currentTarget.offsetHeight) return;
+    event.stopPropagation();
+  }
+
+  function touchstartOnScrollable(e) {
+    if (e.currentTarget.scrollTop === 0) {
+      e.currentTarget.scrollTop = 1;
+    } else if (e.currentTarget.scrollHeight === e.currentTarget.scrollTop + e.currentTarget.offsetHeight) {
+      e.currentTarget.scrollTop -= 1;
+    }
+  }
+
+  scrollControl.addScrollableElements = function (elements) {
+    if (!elements) return;
+
+    if (elements instanceof HTMLElement) {
+      scrollableElements.push(elements);
+      return;
+    } if (typeof elements === 'string' || elements instanceof String) {
+      elements = document.querySelectorAll(elements);
+    }
+
+    if (elements.length) {
+      for (var i = 0; i < elements.length; i++) {
+        scrollableElements.push(elements[i]);
+      }
+    }
+  };
+
+  scrollControl.disableScroll = function () {
+    if (scrollDisabled) return;
+    scrollDisabled = true;
+    window.addEventListener('touchmove', preventWindowScroll, {passive: false});
+    window.addEventListener('wheel', preventWindowScroll);
+    scrollableElements.forEach(function(element) {
+      element.addEventListener('wheel', wheelOnScrollable);
+      element.addEventListener('touchmove', touchmoveOnScrollable, {passive: false});
+      element.addEventListener('touchstart', touchstartOnScrollable, {passive: false});
+    });
+  };
+
+  scrollControl.enableScroll = function () {
+    scrollDisabled = false;
+    window.removeEventListener('touchmove', preventWindowScroll);
+    window.removeEventListener('wheel', preventWindowScroll);
+    scrollableElements.forEach(function(element) {
+      element.removeEventListener('wheel', wheelOnScrollable);
+      element.removeEventListener('touchmove', touchmoveOnScrollable);
+      element.removeEventListener('touchstart', touchstartOnScrollable);
+    });
+  };
+
+  window.scrollControl = scrollControl
+})();

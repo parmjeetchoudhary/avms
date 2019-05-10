@@ -1,0 +1,31 @@
+.form-group{
+width:40%;
+}
+/*.abc{
+color:#ec4d00;
+font-weight:800;
+background:green;
+width:18%;
+}*/
+.clr{
+	color: green;
+}
+/*.label{
+color:white;
+font-weight:bold;
+font-size:20px;
+}
+*/
+.abc{
+	opacity:0.5;
+}
+.cmna{
+	display:inline-block;
+	height:20x;
+	width:150px;
+	border:1px solid black;
+	border-radius:5px;
+	background:red;
+	color:white;
+	text-decoration:none;
+}

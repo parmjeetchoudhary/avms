@@ -1,0 +1,72 @@
+(function() {
+  var Component = function(options) {
+    // Check if it is an instance
+    if (!(this instanceof Component)) {
+      return new Component(options);
+    }
+
+    if (!options.name) {
+      throw new Error('COMPONENT NAME!');
+    }
+    if (!options.selector) {
+      throw new Error('SELECTOR!');
+    }
+
+    this.options = options;
+
+    // options.data && nok.helpers.initMethods(this, options.methods);
+    // options.methods && nok.helpers.initMethods(this, options.methods);
+  };
+
+  Component.prototype.init = function() {
+    var elements = this.elements = document.querySelectorAll(this.options.selector);
+    var self = this;
+    if (!elements.length) return;
+    Array.prototype.forEach.call(elements, function(element) {
+      if (element[self.options.name + 'ComponentInitialized']) return;
+      element[self.options.name + 'ComponentInitialized'] = true;
+      self.options.init && self.options.init(element);
+      self.initResponsive();
+    });
+  };
+
+  Component.prototype.initResponsive = function() {
+    if (!this.options.responsive || !this.options.responsive.length) return;
+
+    var self = this;
+
+    this.options.responsive.forEach(function(options) {
+      if (!options.match) return;
+      if (options.match()) {
+        if (!options.initialized) {
+          options.initialized = true;
+          options.init && Array.prototype.forEach.call(self.elements, function(element) {
+            options.init(element);
+          });
+        }
+      } else {
+        if (options.initialized) {
+          options.initialized = false;
+          options.destroy && options.destroy();
+        }
+      }
+    })
+  };
+
+  Component.prototype.destroy = function() {
+    if (this.options.permanent || !this.elements || !this.elements.length) return;
+    var self = this;
+    this.options.destroy && Array.prototype.forEach.call(self.elements, function(element) {
+      self.options.destroy(element);
+    });
+    this.options.responsive && this.options.responsive.forEach(function(options) {
+      options.initialized = false;
+    });
+    Array.prototype.forEach.call(this.elements, function(element) {
+      if (!element[self.options.name + 'ComponentInitialized']) return;
+      delete element[self.options.name + 'ComponentInitialized'];
+    });
+  };
+
+  window.Component = Component;
+})();

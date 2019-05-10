@@ -1,0 +1,76 @@
+(function () {
+
+  function elementScrollWidth(element) {
+    if (element === document.documentElement) {
+      return window.innerWidth - element.scrollWidth;
+    }
+    return element.offsetWidth - element.scrollWidth;
+  }
+
+  function disableElementScroll(element) {
+    if (element.scrollDisabled) return;
+    element.scrollDisabled = true;
+    var calculatedPadding = getComputedStyle(element).paddingRight;
+    element.inlinePaddingRight = element.style.paddingRight;
+    element.style.paddingRight = parseFloat(calculatedPadding) + elementScrollWidth(element) + 'px';
+    element.style.overflow = 'hidden';
+    if (element === document.documentElement || element === document.body) {
+      element.inlineHeight = element.style.height;
+      element.style.height = '100%';
+    }
+  }
+
+  function enableElementScroll(element) {
+    if (!element.scrollDisabled) return;
+    element.scrollDisabled = false;
+    element.style.paddingRight = element.inlinePaddingRight;
+    element.style.overflow = '';
+    if (element === document.documentElement || element === document.body) {
+      element.style.height = element.inlineHeight;
+    }
+  }
+
+  function disableScroll () {
+    document.documentElement.currentScrollTop = document.documentElement.scrollTop;
+    document.body.currentScrollTop = document.body.scrollTop;
+    var scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    disableElementScroll(document.documentElement);
+    disableElementScroll(document.body);
+    document.body.scrollTop = scrollTop;
+  }
+
+  function enableScroll () {
+    enableElementScroll(document.documentElement);
+    enableElementScroll(document.body);
+    if (document.documentElement.currentScrollTop !== undefined) {
+      document.documentElement.scrollTop = document.documentElement.currentScrollTop;
+      document.documentElement.currentScrollTop = undefined;
+    }
+    if (document.body.currentScrollTop !== undefined) {
+      document.body.scrollTop = document.body.currentScrollTop;
+      document.body.currentScrollTop = undefined;
+    }
+  }
+
+  // function windowLoad() {
+  //   window.removeEventListener('load', windowLoad);
+  //   enableScroll();
+  //   requestAnimationFrame(disableScroll);
+  // }
+  // window.addEventListener('load', windowLoad);
+
+  setTimeout(function() {
+    // disableScroll();
+    // disableElementScroll(document.querySelector('.wrapper'));
+  }, 2000);
+
+  nok.plugin({
+    name: 'scroll',
+    methods: {
+      disable: disableScroll,
+      enable: enableScroll,
+      disableElementScroll: disableElementScroll,
+      enableElementScroll: enableElementScroll
+    }
+  });
+})();

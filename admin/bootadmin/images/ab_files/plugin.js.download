@@ -1,0 +1,14 @@
+(function() {
+
+  var Plugin = function(options) {
+    if (!options.name) {
+      throw new Error('PLUGIN NAME!');
+    }
+
+    nok.helpers.initMethods(this, options.methods);
+
+    nok[options.name] = this;
+  };
+
+  window.Plugin = Plugin;
+})();

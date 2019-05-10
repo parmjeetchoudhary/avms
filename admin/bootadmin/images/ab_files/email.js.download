@@ -1,0 +1,9 @@
+nok.component({
+  name: 'email',
+  selector: '[data-email]',
+  init: function(a) {
+    var email = a.dataset.email + '@' + 'roudstudio' + '.com';
+    a.setAttribute('href', 'ma' + 'il' + 'to:' + email);
+    a.textContent = email;
+  }
+});

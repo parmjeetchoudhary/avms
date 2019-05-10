@@ -1,0 +1,9 @@
+nok.component({
+  name: 'vimeo',
+  selector: '[data-vimeo]',
+  init: function(el) {
+    el.addEventListener('click', function() {
+      nok.player.open(el.getAttribute('data-vimeo'));
+    });
+  }
+});

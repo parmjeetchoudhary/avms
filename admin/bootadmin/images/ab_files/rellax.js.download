@@ -1,0 +1,27 @@
+var rellaxInstance;
+var rellax2Instance;
+//
+// return;
+//
+// nok.component({
+//   name: 'rellax',
+//   selector: '.wrapper',
+//   init: function() {
+//     rellaxInstance && rellaxInstance.destroy();
+//     rellax2Instance && rellax2Instance.destroy();
+//     var rellaxElements = document.getElementsByClassName('rellax');
+//     if (rellaxElements.length) {
+//       rellaxInstance = new Rellax('.rellax', {center: true})
+//     }
+//     var rellax2Elements = document.getElementsByClassName('rellax2');
+//     if (rellax2Elements.length) {
+//       rellax2Instance = new Rellax('.rellax2')
+//     }
+//   },
+//   destroy: function() {
+//     rellaxInstance && rellaxInstance.destroy();
+//     rellaxInstance = null;
+//     rellax2Instance && rellax2Instance.destroy();
+//     rellax2Instance = null;
+//   }
+// });
